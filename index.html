@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareerPath - Login</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>🎓 CareerPath</h1>
+                <p>Your Guide to the Right Career</p>
+            </div>
+            
+            <div class="form-toggle">
+                <button class="toggle-btn active" data-form="login">Login</button>
+                <button class="toggle-btn" data-form="signup">Sign Up</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form active">
+                <div class="input-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="input-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="submit-btn">Login</button>
+                <p class="form-footer">Don't have an account? <a href="#" class="switch-form" data-target="signup">Sign up</a></p>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signupForm" class="auth-form">
+                <div class="input-group">
+                    <label for="signupName">Full Name</label>
+                    <input type="text" id="signupName" placeholder="Enter your name" required>
+                </div>
+                <div class="input-group">
+                    <label for="signupEmail">Email</label>
+                    <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="input-group">
+                    <label for="signupClass">I have passed</label>
+                    <select id="signupClass" required>
+                        <option value="">Select your class</option>
+                        <option value="10th">10th Standard</option>
+                        <option value="12th">12th Standard</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" placeholder="Create a password" required>
+                </div>
+                <button type="submit" class="submit-btn">Create Account</button>
+                <p class="form-footer">Already have an account? <a href="#" class="switch-form" data-target="login">Login</a></p>
+            </form>
+
+            <div id="message" class="message"></div>
+
+            <div class="demo-login">
+                <p>Just want to explore?</p>
+                <button id="demoBtn" class="demo-btn">🚀 Try Demo Login</button>
+                <small>Email: demo@careerpath.com &nbsp;|&nbsp; Password: demo123</small>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
