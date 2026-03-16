@@ -1,29 +1,43 @@
 // ===== Authentication System =====
-document.addEventListener('DOMContentLoaded', function() {
-    // Check if we're on login page or home page
+document.addEventListener('DOMContentLoaded', async function() {
     const isLoginPage = document.querySelector('.login-page');
-    
+
     if (isLoginPage) {
-        initLoginPage();
+        await initLoginPage();
     } else {
-        initHomePage();
+        await initHomePage();
     }
 });
 
-// ===== Login Page Functions =====
-function initLoginPage() {
-    // Check if already logged in
-    const currentUser = localStorage.getItem('careerPathUser');
-    if (currentUser) {
-        window.location.href = 'home.html';
-        return;
+async function apiRequest(url, options = {}) {
+    const response = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            ...(options.headers || {})
+        },
+        credentials: 'include',
+        ...options
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+        throw new Error(data.message || 'Something went wrong.');
     }
 
-    // Seed demo user if not exists
-    const users = JSON.parse(localStorage.getItem('careerPathUsers') || '[]');
-    if (!users.find(u => u.email === 'demo@careerpath.com')) {
-        users.push({ name: 'Demo Student', email: 'demo@careerpath.com', classLevel: '12th', password: 'demo123' });
-        localStorage.setItem('careerPathUsers', JSON.stringify(users));
+    return data;
+}
+
+// ===== Login Page Functions =====
+async function initLoginPage() {
+    try {
+        const session = await apiRequest('/api/auth/session', { method: 'GET' });
+        if (session.authenticated) {
+            window.location.href = '/home';
+            return;
+        }
+    } catch (error) {
+        // User is not logged in yet.
     }
 
     const toggleBtns = document.querySelectorAll('.toggle-btn');
@@ -77,9 +91,9 @@ function initLoginPage() {
     }
 
     // Handle Signup
-    signupForm.addEventListener('submit', function(e) {
+    signupForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         const name = document.getElementById('signupName').value.trim();
         const email = document.getElementById('signupEmail').value.trim();
         const classLevel = document.getElementById('signupClass').value;
@@ -90,54 +104,52 @@ function initLoginPage() {
             return;
         }
 
-        // Get existing users or create empty array
-        const users = JSON.parse(localStorage.getItem('careerPathUsers') || '[]');
-        
-        // Check if email already exists
-        if (users.find(u => u.email === email)) {
-            showMessage('Email already registered. Please login.', 'error');
-            return;
+        try {
+            await apiRequest('/api/auth/signup', {
+                method: 'POST',
+                body: JSON.stringify({ name, email, classLevel, password })
+            });
+
+            signupForm.reset();
+            showMessage('Account created successfully! Please login.', 'success');
+            setTimeout(() => switchForm('login'), 1500);
+        } catch (error) {
+            showMessage(error.message, 'error');
         }
-
-        // Add new user
-        const newUser = { name, email, classLevel, password };
-        users.push(newUser);
-        localStorage.setItem('careerPathUsers', JSON.stringify(users));
-
-        showMessage('Account created successfully! Please login.', 'success');
-        
-        // Switch to login form after delay
-        setTimeout(() => switchForm('login'), 1500);
     });
 
     // Handle Login
-    loginForm.addEventListener('submit', function(e) {
+    loginForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
 
-        const users = JSON.parse(localStorage.getItem('careerPathUsers') || '[]');
-        const user = users.find(u => u.email === email && u.password === password);
+        try {
+            await apiRequest('/api/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, password })
+            });
 
-        if (user) {
-            localStorage.setItem('careerPathUser', JSON.stringify(user));
             showMessage('Login successful! Redirecting...', 'success');
             setTimeout(() => {
-                window.location.href = 'home.html';
+                window.location.href = '/home';
             }, 1000);
-        } else {
-            showMessage('Invalid email or password', 'error');
+        } catch (error) {
+            showMessage(error.message, 'error');
         }
     });
 }
 
 // ===== Home Page Functions =====
-function initHomePage() {
-    // Check authentication
-    const currentUser = JSON.parse(localStorage.getItem('careerPathUser'));
-    if (!currentUser) {
-        window.location.href = 'index.html';
+async function initHomePage() {
+    let currentUser;
+
+    try {
+        const session = await apiRequest('/api/auth/session', { method: 'GET' });
+        currentUser = session.user;
+    } catch (error) {
+        window.location.href = '/';
         return;
     }
 
@@ -150,9 +162,12 @@ function initHomePage() {
     // Logout functionality
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', function() {
-            localStorage.removeItem('careerPathUser');
-            window.location.href = 'index.html';
+        logoutBtn.addEventListener('click', async function() {
+            try {
+                await apiRequest('/api/auth/logout', { method: 'POST' });
+            } finally {
+                window.location.href = '/';
+            }
         });
     }
 
